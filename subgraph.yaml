@@ -1,0 +1,68 @@
+specVersion: 0.0.4
+description: Mendi Finance is a decentralized lending protocol for individuals, institutions and protocols to access financial services.
+repository: https://github.com/mendi-finance/subgraph
+schema:
+  file: ./schema.graphql
+features:
+  - nonFatalErrors
+  - grafting
+dataSources:
+  - kind: ethereum/contract
+    name: Comptroller
+    network: linea
+    source:
+      address: '0x1b4d3b0421dDc1eB216D230Bc01527422Fb93103'
+      abi: Comptroller
+      startBlock: 215960
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mappings/comptroller.ts
+      entities:
+        - Comptroller
+        - Market
+      abis:
+        - name: Comptroller
+          file: ./abis/comptroller.json
+        - name: CToken
+          file: ./abis/ctoken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: MarketListed(address)
+          handler: handleMarketListed
+templates:
+  - kind: ethereum/contract
+    name: CToken
+    network: linea
+    source:
+      abi: CToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mappings/ctoken/index.ts
+      entities:
+        - Market
+        - Token
+      abis:
+        - name: CToken
+          file: ./abis/ctoken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Borrow(address,uint256,uint256,uint256)
+          handler: handleBorrow
+        - event: RepayBorrow(address,address,uint256,uint256,uint256)
+          handler: handleRepayBorrow

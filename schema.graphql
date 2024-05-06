@@ -1,0 +1,132 @@
+type Comptroller @entity {
+  # factory address
+  id: ID!
+  # amount of pools created
+  marketCount: BigInt!
+}
+
+type Token @entity {
+  # token address
+  id: ID!
+  # token symbol
+  symbol: String!
+  # token name
+  name: String!
+  # token decimals
+  decimals: BigInt!
+  # transactions across all pools that include this token
+  txCount: BigInt!
+}
+
+type Market @entity {
+  # pool address
+  id: ID!
+  # creation
+  createdAtTimestamp: BigInt!
+  # block pool was created at
+  createdAtBlockNumber: BigInt!
+  # underlying token
+  underlying: Token!
+  # all time number of transactions
+  txCount: BigInt!
+  # derived fields
+  transfer: [Transfer!]! @derivedFrom(field: "market")
+  borrows: [Borrow!]! @derivedFrom(field: "market")
+  repayBorrows: [RepayBorrow!]! @derivedFrom(field: "market")
+}
+
+type Transaction @entity {
+  # txn hash
+  id: ID!
+  # block txn was included in
+  blockNumber: BigInt!
+  # timestamp txn was confirmed
+  timestamp: BigInt!
+  # gas used during txn execution
+  gasUsed: BigInt!
+  gasPrice: BigInt!
+  # derived values
+  transfers: [Transfer]! @derivedFrom(field: "transaction")
+  borrows: [Borrow]! @derivedFrom(field: "transaction")
+  repayBorrows: [RepayBorrow]! @derivedFrom(field: "transaction")
+}
+
+type Transfer @entity {
+  # transaction hash + "#" + index in transfers Transaction array
+  id: ID!
+  # which txn the event was included in
+  transaction: Transaction!
+  # order within the txn
+  logIndex: BigInt
+  # time of txn
+  timestamp: BigInt!
+  # market position is within
+  market: Market!
+  # allow indexing by token
+  token: Token!
+
+  # the address where transfer sent from
+  from: Bytes!
+  # the address where transfer sent to
+  to: Bytes!
+  # ctoken amount of transfer
+  tokenAmount: BigInt!
+}
+
+type Borrow @entity {
+  # transaction hash + "#" + index in borrows Transaction array
+  id: ID!
+  # which txn the event was included in
+  transaction: Transaction!
+  # order within the txn
+  logIndex: BigInt
+  # time of txn
+  timestamp: BigInt!
+  # market position is within
+  market: Market!
+  # allow indexing by token
+  token: Token!
+
+  # the address of borrower
+  account: Bytes!
+  # amount of borrow
+  amount: BigInt!
+  # current total borrows of account
+  accountBorrows: BigInt!
+}
+
+type RepayBorrow @entity {
+  # transaction hash + "#" + index in repayBorrows Transaction array
+  id: ID!
+  # which txn the event was included in
+  transaction: Transaction!
+  # order within the txn
+  logIndex: BigInt
+  # time of txn
+  timestamp: BigInt!
+  # market position is within
+  market: Market!
+  # allow indexing by token
+  token: Token!
+
+  # the address of borrower
+  account: Bytes!
+  # amount of borrow
+  amount: BigInt!
+  # current total borrows of account
+  accountBorrows: BigInt!
+}
+
+type AccountState @entity {
+  # account + "#" + token
+  id: ID!
+  # account of tvl
+  account: Bytes!
+  # token of tvl
+  token: Token!
+
+  # lent token amount by account
+  lentAmount: BigInt!
+  # borrowed amount by account
+  borrowAmount: BigInt!
+}
